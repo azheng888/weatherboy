@@ -10,6 +10,13 @@ console.log('API Key loaded:', process.env.OPENWEATHER_API_KEY ? 'Yes' : 'No');
 app.use(cors());
 app.use(express.json());
 
+const path = require('path');
+
+// Serve static files from React build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+}
+
 app.get('/test', (req, res) => {
     res.json({ message: 'Server is working!' });
 });
@@ -49,6 +56,12 @@ app.get('/api/forecast/:city', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch forecast data' });
     }
 });
+
+if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+    });
+  }
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
