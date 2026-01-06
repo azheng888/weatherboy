@@ -287,3 +287,39 @@ h1 {
     padding: 24px;
   }
 }
+
+.welcome-state {
+  text-align: center;
+  padding: 80px 40px;
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  margin-top: 40px;
+}
+
+.welcome-icon {
+  font-size: 72px;
+  margin-bottom: 24px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.welcome-state h2 {
+  font-size: 32px;
+  color: white;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.welcome-state p {
+  font-size: 18px;
+  color: #a0aec0;
+}
