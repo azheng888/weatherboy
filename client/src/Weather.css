@@ -51,10 +51,17 @@ h1 {
   display: flex;
   gap: 12px;
   margin-bottom: 40px;
+  align-items: flex-start;
+}
+
+.search-container {
+  flex: 1;
+  position: relative;
+  min-width: 0;
 }
 
 .search-input {
-  flex: 1;
+  width: 100%;
   padding: 16px 24px;
   font-size: 16px;
   background: #1a1f2e;
@@ -322,4 +329,43 @@ h1 {
 .welcome-state p {
   font-size: 18px;
   color: #a0aec0;
+}
+
+.search-container {
+  flex: 1;
+  position: relative;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  margin-top: -12px;
+  padding-top: 12px;
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 12px 24px;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-item:hover {
+  background: #2d3748;
+}
+
+.suggestion-item:last-child {
+  border-radius: 0 0 12px 12px;
 }

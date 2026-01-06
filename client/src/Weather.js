@@ -9,6 +9,8 @@ function Weather() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [unit, setUnit] = useState('C'); // 'C' for Celsius, 'F' for Fahrenheit
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
 
   const fetchWeather = async (e) => {
     e.preventDefault();
@@ -32,6 +34,33 @@ function Weather() {
     }
   };
 
+  const handleCityChange = async (e) => {
+    const value = e.target.value;
+    setCity(value);
+
+    if (value.length > 2) {
+      try {
+        const response = await axios.get(`/api/search/${value}`);
+        setSuggestions(response.data);
+        setShowSuggestions(true);
+      } catch (err) {
+        setSuggestions([]);
+      }
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+
+  };
+
+  const handleCitySelect = (selectedCity) => {
+    const cityName = `${selectedCity.name}${selectedCity.state ? ', ' + selectedCity.state : ''}, ${selectedCity.country}`;
+    setCity(cityName);
+    setShowSuggestions(false);
+  };
+
+  const filteredCities = suggestions;
+
   const convertTemp = (temp) => {
     if (unit === 'F') {
       return Math.round((temp * 9/5) + 32);
@@ -53,13 +82,32 @@ function Weather() {
       </div>
       
       <form onSubmit={fetchWeather} className="search-form">
-        <input
-          type="text"
-          placeholder="Enter city name..."
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="search-input"
-        />
+        <div className="search-container">
+            <input
+              type="text"
+              placeholder="Enter city name..."
+              value={city}
+              onChange={handleCityChange}
+              onFocus={() => setShowSuggestions(city.length > 0)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              className="search-input"
+            />
+            {showSuggestions && filteredCities.length > 0 && (
+              <div className="suggestions-dropdown">
+                {filteredCities.map((cityData, index) => (
+                <div
+                  key={index}
+                  className="suggestion-item"
+                  onClick={() => handleCitySelect(cityData)}
+                >
+                  📍 {cityData.name}
+                  {cityData.state && `, ${cityData.state}`}
+                  {cityData.country && ` - ${cityData.country}`}
+                </div>
+              ))}
+              </div>
+            )}
+          </div>
         <button type="submit" className="search-btn">
           Search
         </button>
