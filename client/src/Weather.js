@@ -68,6 +68,14 @@ function Weather() {
       {loading && <p className="loading">Loading...</p>}
       {error && <p className="error">{error}</p>}
 
+      {!weather && !loading && !error && (
+        <div className="welcome-state">
+          <div className="welcome-icon">🌤️</div>
+          <h2>Welcome to WeatherBoy</h2>
+          <p>Search for a city to view current weather and forecasts</p>
+        </div>
+      )}
+
       {weather && (
         <div className="current-weather">
           <h2>{weather.name}, {weather.sys.country}</h2>
