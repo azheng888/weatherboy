@@ -21,6 +21,22 @@ app.get('/test', (req, res) => {
     res.json({ message: 'Server is working!' });
 });
 
+// Geocoding API - search for cities
+app.get('/api/search/:query', async (req, res) => {
+    try {
+        const { query } = req.params;
+        const apiKey = process.env.OPENWEATHER_API_KEY;
+        
+        const response = await axios.get(
+            `http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${apiKey}`
+        );
+        
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to search cities' });
+    }
+});
+
 // Get weather by city name
 app.get('/api/weather/:city', async (req, res) => {
     try {
