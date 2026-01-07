@@ -24,6 +24,34 @@ body {
   margin-bottom: 40px;
 }
 
+.logo {
+  color: white;
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s;
+  user-select: none;
+}
+
+.logo:hover {
+  color: #7c3aed;
+  transform: translateY(-2px);
+}
+
+.logo-icon {
+  font-size: 36px;
+  display: inline-block;
+  transition: transform 0.3s;
+}
+
+.logo:hover .logo-icon {
+  transform: rotate(10deg) scale(1.1);
+}
+
 h1 {
   color: white;
   font-size: 32px;
@@ -135,6 +163,57 @@ h1 {
   align-items: center;
   gap: 40px;
   margin-bottom: 40px;
+}
+
+.temp-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.weather-icon-large {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.weather-icon-small {
+  width: 64px;
+  height: 64px;
+  margin: 8px 0;
+}
+
+.weather-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding-top: 30px;
+  border-top: 1px solid #2d3748;
+}
+
+.forecast-date {
+  font-weight: 600;
+  color: #7c3aed;
+  margin-bottom: 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+  .temp-main {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .weather-icon-large {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .weather-details {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .temperature {
