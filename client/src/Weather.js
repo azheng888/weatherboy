@@ -100,7 +100,7 @@ function Weather() {
                   className="suggestion-item"
                   onClick={() => handleCitySelect(cityData)}
                 >
-                  📍 {cityData.name}
+                  {cityData.name}
                   {cityData.state && `, ${cityData.state}`}
                   {cityData.country && ` - ${cityData.country}`}
                 </div>
