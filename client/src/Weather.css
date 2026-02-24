@@ -151,12 +151,7 @@ h1 {
   margin-bottom: 30px;
 }
 
-.current-weather h2 {
-  font-size: 24px;
-  margin-bottom: 30px;
-  color: #e2e8f0;
-  font-weight: 500;
-}
+/* .current-weather h2 is now handled by .weather-title-row h2 */
 
 .temp-display {
   display: flex;
@@ -449,6 +444,91 @@ h1 {
   border-radius: 0 0 12px 12px;
 }
 
+/* Favorites bar */
+.favorites-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.fav-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 20px;
+  padding: 6px 12px 6px 14px;
+  transition: all 0.2s;
+}
+
+.fav-chip:hover {
+  border-color: #7c3aed;
+}
+
+.fav-chip span {
+  font-size: 13px;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.fav-chip span:hover {
+  color: #7c3aed;
+}
+
+.fav-remove {
+  background: none;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.fav-remove:hover {
+  color: #ef4444;
+}
+
+/* Favorite button on weather card */
+.weather-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.weather-title-row h2 {
+  font-size: 24px;
+  color: #e2e8f0;
+  font-weight: 500;
+  margin: 0;
+}
+
+.fav-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #718096;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+  padding: 4px;
+}
+
+.fav-btn:hover {
+  color: #eab308;
+  transform: scale(1.2);
+}
+
+.fav-btn--active {
+  color: #eab308;
+}
+
 /* Geolocation button */
 .geo-btn {
   padding: 16px 18px;
@@ -632,6 +712,49 @@ h1 {
 
 @media (max-width: 768px) {
   .hourly-forecast {
+    padding: 24px;
+  }
+}
+
+/* Temperature trend chart */
+.temp-chart {
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 30px;
+}
+
+.temp-chart h3 {
+  font-size: 20px;
+  margin-bottom: 24px;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.chart-tooltip {
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.chart-tooltip-label {
+  font-size: 12px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.chart-tooltip-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #7c3aed;
+}
+
+@media (max-width: 768px) {
+  .temp-chart {
     padding: 24px;
   }
 }
