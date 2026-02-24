@@ -448,3 +448,190 @@ h1 {
 .suggestion-item:last-child {
   border-radius: 0 0 12px 12px;
 }
+
+/* Geolocation button */
+.geo-btn {
+  padding: 16px 18px;
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.geo-btn:hover:not(:disabled) {
+  border-color: #7c3aed;
+  color: #7c3aed;
+  transform: translateY(-2px);
+}
+
+.geo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* AQI */
+.aqi-section {
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 30px;
+}
+
+.aqi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.aqi-header h3 {
+  font-size: 20px;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.aqi-badge {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+.aqi-components {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.aqi-component {
+  background: #0f1419;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.aqi-component span {
+  display: block;
+  color: #718096;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.aqi-component strong {
+  font-size: 20px;
+  color: white;
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .aqi-components {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .aqi-components {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .aqi-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .aqi-section {
+    padding: 24px;
+  }
+}
+
+/* Hourly forecast */
+.hourly-forecast {
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 30px;
+}
+
+.hourly-forecast h3 {
+  font-size: 20px;
+  margin-bottom: 24px;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.hourly-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #7c3aed #0f1419;
+}
+
+.hourly-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.hourly-scroll::-webkit-scrollbar-track {
+  background: #0f1419;
+  border-radius: 2px;
+}
+
+.hourly-scroll::-webkit-scrollbar-thumb {
+  background: #7c3aed;
+  border-radius: 2px;
+}
+
+.hourly-card {
+  flex: 0 0 auto;
+  background: #0f1419;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  padding: 16px 14px;
+  text-align: center;
+  min-width: 88px;
+  transition: all 0.3s;
+}
+
+.hourly-card:hover {
+  border-color: #7c3aed;
+  transform: translateY(-4px);
+}
+
+.hourly-time {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 6px;
+}
+
+.hourly-temp {
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  margin: 4px 0 0;
+}
+
+.hourly-pop {
+  font-size: 12px;
+  color: #63b3ed;
+  margin-top: 6px;
+  min-height: 18px;
+}
+
+@media (max-width: 768px) {
+  .hourly-forecast {
+    padding: 24px;
+  }
+}

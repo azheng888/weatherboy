@@ -57,6 +57,48 @@ app.get('/api/weather/:city', async (req, res) => {
     }
 });
 
+// Get weather by coordinates
+app.get('/api/weather-by-coords', async (req, res) => {
+    try {
+        const { lat, lon } = req.query;
+        const apiKey = process.env.OPENWEATHER_API_KEY;
+        const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+        );
+        res.json(response.data);
+    } catch (error) {
+        res.status(error.response?.status || 500).json({ error: 'Failed to fetch weather data' });
+    }
+});
+
+// Get forecast by coordinates
+app.get('/api/forecast-by-coords', async (req, res) => {
+    try {
+        const { lat, lon } = req.query;
+        const apiKey = process.env.OPENWEATHER_API_KEY;
+        const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+        );
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch forecast data' });
+    }
+});
+
+// Get AQI by coordinates
+app.get('/api/aqi', async (req, res) => {
+    try {
+        const { lat, lon } = req.query;
+        const apiKey = process.env.OPENWEATHER_API_KEY;
+        const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
+        );
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch AQI data' });
+    }
+});
+
 // Get 5-day forecast
 app.get('/api/forecast/:city', async (req, res) => {
     try {
