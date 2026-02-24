@@ -6,11 +6,21 @@ function Weather() {
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState(null);
+  const [aqi, setAqi] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [geoLoading, setGeoLoading] = useState(false);
   const [error, setError] = useState('');
-  const [unit, setUnit] = useState('F'); // 'C' for Celsius, 'F' for Fahrenheit
+  const [unit, setUnit] = useState('F');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+
+  const loadAllData = async (weatherRes, forecastRes) => {
+    const { lat, lon } = weatherRes.data.coord;
+    const aqiRes = await axios.get(`/api/aqi?lat=${lat}&lon=${lon}`);
+    setWeather(weatherRes.data);
+    setForecast(forecastRes.data);
+    setAqi(aqiRes.data);
+  };
 
   const fetchWeather = async (e) => {
     e.preventDefault();
@@ -20,18 +30,53 @@ function Weather() {
     setError('');
 
     try {
-      const weatherRes = await axios.get(`/api/weather/${city}`);
-      const forecastRes = await axios.get(`/api/forecast/${city}`);
-      
-      setWeather(weatherRes.data);
-      setForecast(forecastRes.data);
+      const [weatherRes, forecastRes] = await Promise.all([
+        axios.get(`/api/weather/${encodeURIComponent(city)}`),
+        axios.get(`/api/forecast/${encodeURIComponent(city)}`),
+      ]);
+      await loadAllData(weatherRes, forecastRes);
     } catch (err) {
       setError('City not found. Please try again.');
       setWeather(null);
       setForecast(null);
+      setAqi(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchByGeolocation = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setGeoLoading(true);
+    setError('');
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const { latitude: lat, longitude: lon } = coords;
+        try {
+          const [weatherRes, forecastRes] = await Promise.all([
+            axios.get(`/api/weather-by-coords?lat=${lat}&lon=${lon}`),
+            axios.get(`/api/forecast-by-coords?lat=${lat}&lon=${lon}`),
+          ]);
+          setCity(weatherRes.data.name);
+          await loadAllData(weatherRes, forecastRes);
+        } catch (err) {
+          setError('Failed to fetch weather for your location.');
+          setWeather(null);
+          setForecast(null);
+          setAqi(null);
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      () => {
+        setError('Unable to retrieve your location. Please check your browser permissions.');
+        setGeoLoading(false);
+      }
+    );
   };
 
   const handleCityChange = async (e) => {
@@ -50,7 +95,6 @@ function Weather() {
       setSuggestions([]);
       setShowSuggestions(false);
     }
-
   };
 
   const handleCitySelect = (selectedCity) => {
@@ -58,8 +102,6 @@ function Weather() {
     setCity(cityName);
     setShowSuggestions(false);
   };
-
-  const filteredCities = suggestions;
 
   const convertTemp = (temp) => {
     if (unit === 'F') {
@@ -71,10 +113,11 @@ function Weather() {
   const toggleUnit = () => {
     setUnit(unit === 'C' ? 'F' : 'C');
   };
-  
+
   const handleHomeClick = () => {
     setWeather(null);
     setForecast(null);
+    setAqi(null);
     setCity('');
     setError('');
   };
@@ -84,38 +127,56 @@ function Weather() {
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  };
+
+  const formatHour = (timestamp) => {
+    return new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      hour12: true
+    });
+  };
+
+  const getAqiInfo = (aqiValue) => {
+    const levels = [
+      { label: 'Good',      color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.3)' },
+      { label: 'Fair',      color: '#84cc16', bg: 'rgba(132,204,22,0.12)',  border: 'rgba(132,204,22,0.3)' },
+      { label: 'Moderate',  color: '#eab308', bg: 'rgba(234,179,8,0.12)',   border: 'rgba(234,179,8,0.3)' },
+      { label: 'Poor',      color: '#f97316', bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.3)' },
+      { label: 'Very Poor', color: '#ef4444', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.3)' },
+    ];
+    return levels[aqiValue - 1];
   };
 
   return (
     <div className="weather-app">
       <div className="header">
         <h1 onClick={handleHomeClick} className="logo">
-            <span className="logo-icon">🌤️</span>
-            WeatherBoy
+          <span className="logo-icon">🌤️</span>
+          WeatherBoy
         </h1>
         <button onClick={toggleUnit} className="unit-toggle">
           Switch to °{unit === 'C' ? 'F' : 'C'}
         </button>
       </div>
-      
+
       <form onSubmit={fetchWeather} className="search-form">
         <div className="search-container">
-            <input
-              type="text"
-              placeholder="Enter city name..."
-              value={city}
-              onChange={handleCityChange}
-              onFocus={() => setShowSuggestions(city.length > 0)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="search-input"
-            />
-            {showSuggestions && filteredCities.length > 0 && (
-              <div className="suggestions-dropdown">
-                {filteredCities.map((cityData, index) => (
+          <input
+            type="text"
+            placeholder="Enter city name..."
+            value={city}
+            onChange={handleCityChange}
+            onFocus={() => setShowSuggestions(city.length > 0)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            className="search-input"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="suggestions-dropdown">
+              {suggestions.map((cityData, index) => (
                 <div
                   key={index}
                   className="suggestion-item"
@@ -126,22 +187,31 @@ function Weather() {
                   {cityData.country && ` - ${cityData.country}`}
                 </div>
               ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="geo-btn"
+          onClick={fetchByGeolocation}
+          disabled={geoLoading}
+          title="Use my location"
+        >
+          {geoLoading ? '⏳' : '📍'}
+        </button>
         <button type="submit" className="search-btn">
           Search
         </button>
       </form>
 
-      {loading && <p className="loading">Loading...</p>}
+      {(loading || geoLoading) && <p className="loading">Loading...</p>}
       {error && <p className="error">{error}</p>}
 
-      {!weather && !loading && !error && (
+      {!weather && !loading && !geoLoading && !error && (
         <div className="welcome-state">
           <div className="welcome-icon">🌤️</div>
           <h2>Welcome to WeatherBoy</h2>
-          <p>Search for a city to view current weather and forecasts</p>
+          <p>Search for a city or use your location to view current weather and forecasts</p>
         </div>
       )}
 
@@ -150,8 +220,8 @@ function Weather() {
           <h2>{weather.name}, {weather.sys.country}</h2>
           <div className="temp-display">
             <div className="temp-main">
-              <img 
-                src={getWeatherIcon(weather.weather[0].icon)} 
+              <img
+                src={getWeatherIcon(weather.weather[0].icon)}
                 alt={weather.weather[0].description}
                 className="weather-icon-large"
               />
@@ -192,6 +262,73 @@ function Weather() {
         </div>
       )}
 
+      {aqi && (() => {
+        const aqiValue = aqi.list[0].main.aqi;
+        const components = aqi.list[0].components;
+        const info = getAqiInfo(aqiValue);
+        return (
+          <div className="aqi-section">
+            <div className="aqi-header">
+              <h3>Air Quality Index</h3>
+              <span
+                className="aqi-badge"
+                style={{ color: info.color, background: info.bg, border: `1px solid ${info.border}` }}
+              >
+                {aqiValue} — {info.label}
+              </span>
+            </div>
+            <div className="aqi-components">
+              <div className="aqi-component">
+                <span>PM2.5</span>
+                <strong>{components.pm2_5.toFixed(1)}</strong>
+              </div>
+              <div className="aqi-component">
+                <span>PM10</span>
+                <strong>{components.pm10.toFixed(1)}</strong>
+              </div>
+              <div className="aqi-component">
+                <span>O₃</span>
+                <strong>{components.o3.toFixed(1)}</strong>
+              </div>
+              <div className="aqi-component">
+                <span>NO₂</span>
+                <strong>{components.no2.toFixed(1)}</strong>
+              </div>
+              <div className="aqi-component">
+                <span>SO₂</span>
+                <strong>{components.so2.toFixed(1)}</strong>
+              </div>
+              <div className="aqi-component">
+                <span>CO</span>
+                <strong>{components.co.toFixed(1)}</strong>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {forecast && (
+        <div className="hourly-forecast">
+          <h3>24-Hour Forecast</h3>
+          <div className="hourly-scroll">
+            {forecast.list.slice(0, 8).map((item, index) => (
+              <div key={index} className="hourly-card">
+                <p className="hourly-time">{formatHour(item.dt)}</p>
+                <img
+                  src={getWeatherIcon(item.weather[0].icon)}
+                  alt={item.weather[0].description}
+                  className="weather-icon-small"
+                />
+                <p className="hourly-temp">{convertTemp(item.main.temp)}°{unit}</p>
+                <p className="hourly-pop">
+                  {item.pop > 0 ? `💧 ${Math.round(item.pop * 100)}%` : ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {forecast && (
         <div className="forecast">
           <h3>5-Day Forecast</h3>
@@ -204,8 +341,8 @@ function Weather() {
                   <p className="forecast-date">
                     {new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })}
                   </p>
-                  <img 
-                    src={getWeatherIcon(item.weather[0].icon)} 
+                  <img
+                    src={getWeatherIcon(item.weather[0].icon)}
                     alt={item.weather[0].description}
                     className="weather-icon-small"
                   />
