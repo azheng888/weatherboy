@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "WeatherBoy",
+  "name": "WeatherBoy - Weather & Air Quality",
+  "description": "Real-time weather forecasts, air quality data, and hourly predictions",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#7c3aed",
+  "background_color": "#0f1419"
 }

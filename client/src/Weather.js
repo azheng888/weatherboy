@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
+} from 'recharts';
 import './Weather.css';
 
 function Weather() {
@@ -13,6 +16,46 @@ function Weather() {
   const [unit, setUnit] = useState('F');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('weatherboy-favorites') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const searchInputRef = useRef(null);
+
+  // Press '/' to focus search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Dynamic background based on weather condition
+  useEffect(() => {
+    document.body.style.transition = 'background-color 1.5s ease';
+    document.body.style.backgroundColor = getBackgroundColor(weather);
+  }, [weather]);
+
+  const getBackgroundColor = (w) => {
+    if (!w) return '#0f1419';
+    const id = w.weather[0].id;
+    const isNight = w.weather[0].icon.endsWith('n');
+    if (id >= 200 && id < 300) return '#0c0a1a'; // thunderstorm: deep purple-black
+    if (id >= 300 && id < 400) return '#0d1e2e'; // drizzle: steel blue-black
+    if (id >= 500 && id < 600) return '#091520'; // rain: dark navy
+    if (id >= 600 && id < 700) return '#141e30'; // snow: icy blue-black
+    if (id >= 700 && id < 800) return '#171720'; // atmosphere: grey-black
+    if (id === 800) return isNight ? '#04080e' : '#0a1e35'; // clear: near-black or deep sky
+    return isNight ? '#0e1420' : '#121d2a'; // clouds: blue-grey dark
+  };
 
   const loadAllData = async (weatherRes, forecastRes) => {
     const { lat, lon } = weatherRes.data.coord;
@@ -22,17 +65,13 @@ function Weather() {
     setAqi(aqiRes.data);
   };
 
-  const fetchWeather = async (e) => {
-    e.preventDefault();
-    if (!city.trim()) return;
-
+  const fetchWeatherForCity = async (cityName) => {
     setLoading(true);
     setError('');
-
     try {
       const [weatherRes, forecastRes] = await Promise.all([
-        axios.get(`/api/weather/${encodeURIComponent(city)}`),
-        axios.get(`/api/forecast/${encodeURIComponent(city)}`),
+        axios.get(`/api/weather/${encodeURIComponent(cityName)}`),
+        axios.get(`/api/forecast/${encodeURIComponent(cityName)}`),
       ]);
       await loadAllData(weatherRes, forecastRes);
     } catch (err) {
@@ -43,6 +82,12 @@ function Weather() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchWeather = async (e) => {
+    e.preventDefault();
+    if (!city.trim()) return;
+    await fetchWeatherForCity(city);
   };
 
   const fetchByGeolocation = () => {
@@ -82,7 +127,6 @@ function Weather() {
   const handleCityChange = async (e) => {
     const value = e.target.value;
     setCity(value);
-
     if (value.length > 2) {
       try {
         const response = await axios.get(`/api/search/${value}`);
@@ -104,15 +148,11 @@ function Weather() {
   };
 
   const convertTemp = (temp) => {
-    if (unit === 'F') {
-      return Math.round((temp * 9/5) + 32);
-    }
+    if (unit === 'F') return Math.round((temp * 9 / 5) + 32);
     return Math.round(temp);
   };
 
-  const toggleUnit = () => {
-    setUnit(unit === 'C' ? 'F' : 'C');
-  };
+  const toggleUnit = () => setUnit(unit === 'C' ? 'F' : 'C');
 
   const handleHomeClick = () => {
     setWeather(null);
@@ -122,23 +162,35 @@ function Weather() {
     setError('');
   };
 
-  const getWeatherIcon = (iconCode) => {
-    return `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
-  };
-
-  const formatTime = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+  const toggleFavorite = () => {
+    if (!weather) return;
+    const key = `${weather.name}, ${weather.sys.country}`;
+    setFavorites(prev => {
+      const updated = prev.includes(key) ? prev.filter(f => f !== key) : [...prev, key];
+      localStorage.setItem('weatherboy-favorites', JSON.stringify(updated));
+      return updated;
     });
   };
 
-  const formatHour = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      hour12: true
+  const removeFavorite = (key) => {
+    setFavorites(prev => {
+      const updated = prev.filter(f => f !== key);
+      localStorage.setItem('weatherboy-favorites', JSON.stringify(updated));
+      return updated;
     });
   };
+
+  const isFavorited = weather ? favorites.includes(`${weather.name}, ${weather.sys.country}`) : false;
+
+  const getWeatherIcon = (iconCode) => `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+  const formatTime = (timestamp) => new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const formatHour = (timestamp) => new Date(timestamp * 1000).toLocaleTimeString('en-US', {
+    hour: 'numeric', hour12: true
+  });
 
   const getAqiInfo = (aqiValue) => {
     const levels = [
@@ -150,6 +202,29 @@ function Weather() {
     ];
     return levels[aqiValue - 1];
   };
+
+  const getChartData = () => {
+    if (!forecast) return [];
+    return forecast.list.map((item, i) => ({
+      label: new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
+      index: i,
+      temp: convertTemp(item.main.temp),
+    }));
+  };
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="chart-tooltip">
+          <p className="chart-tooltip-label">{label}</p>
+          <p className="chart-tooltip-value">{payload[0].value}°{unit}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const chartData = getChartData();
 
   return (
     <div className="weather-app">
@@ -166,8 +241,9 @@ function Weather() {
       <form onSubmit={fetchWeather} className="search-form">
         <div className="search-container">
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder="Enter city name..."
+            placeholder="Enter city name... (press / to focus)"
             value={city}
             onChange={handleCityChange}
             onFocus={() => setShowSuggestions(city.length > 0)}
@@ -199,10 +275,19 @@ function Weather() {
         >
           {geoLoading ? '⏳' : '📍'}
         </button>
-        <button type="submit" className="search-btn">
-          Search
-        </button>
+        <button type="submit" className="search-btn">Search</button>
       </form>
+
+      {favorites.length > 0 && (
+        <div className="favorites-bar">
+          {favorites.map((fav, i) => (
+            <div key={i} className="fav-chip">
+              <span onClick={() => { setCity(fav); fetchWeatherForCity(fav); }}>{fav}</span>
+              <button className="fav-remove" onClick={() => removeFavorite(fav)}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {(loading || geoLoading) && <p className="loading">Loading...</p>}
       {error && <p className="error">{error}</p>}
@@ -217,7 +302,16 @@ function Weather() {
 
       {weather && (
         <div className="current-weather">
-          <h2>{weather.name}, {weather.sys.country}</h2>
+          <div className="weather-title-row">
+            <h2>{weather.name}, {weather.sys.country}</h2>
+            <button
+              className={`fav-btn ${isFavorited ? 'fav-btn--active' : ''}`}
+              onClick={toggleFavorite}
+              title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              {isFavorited ? '★' : '☆'}
+            </button>
+          </div>
           <div className="temp-display">
             <div className="temp-main">
               <img
@@ -278,30 +372,12 @@ function Weather() {
               </span>
             </div>
             <div className="aqi-components">
-              <div className="aqi-component">
-                <span>PM2.5</span>
-                <strong>{components.pm2_5.toFixed(1)}</strong>
-              </div>
-              <div className="aqi-component">
-                <span>PM10</span>
-                <strong>{components.pm10.toFixed(1)}</strong>
-              </div>
-              <div className="aqi-component">
-                <span>O₃</span>
-                <strong>{components.o3.toFixed(1)}</strong>
-              </div>
-              <div className="aqi-component">
-                <span>NO₂</span>
-                <strong>{components.no2.toFixed(1)}</strong>
-              </div>
-              <div className="aqi-component">
-                <span>SO₂</span>
-                <strong>{components.so2.toFixed(1)}</strong>
-              </div>
-              <div className="aqi-component">
-                <span>CO</span>
-                <strong>{components.co.toFixed(1)}</strong>
-              </div>
+              <div className="aqi-component"><span>PM2.5</span><strong>{components.pm2_5.toFixed(1)}</strong></div>
+              <div className="aqi-component"><span>PM10</span><strong>{components.pm10.toFixed(1)}</strong></div>
+              <div className="aqi-component"><span>O₃</span><strong>{components.o3.toFixed(1)}</strong></div>
+              <div className="aqi-component"><span>NO₂</span><strong>{components.no2.toFixed(1)}</strong></div>
+              <div className="aqi-component"><span>SO₂</span><strong>{components.so2.toFixed(1)}</strong></div>
+              <div className="aqi-component"><span>CO</span><strong>{components.co.toFixed(1)}</strong></div>
             </div>
           </div>
         );
@@ -326,6 +402,47 @@ function Weather() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {forecast && (
+        <div className="temp-chart">
+          <h3>Temperature Trend</h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3748" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: '#718096', fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+                interval={7}
+              />
+              <YAxis
+                tick={{ fill: '#718096', fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={v => `${v}°`}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="temp"
+                stroke="#7c3aed"
+                strokeWidth={2}
+                fill="url(#tempGradient)"
+                dot={false}
+                activeDot={{ r: 4, fill: '#7c3aed', strokeWidth: 0 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       )}
 
