@@ -1,14 +1,3 @@
-const axios = require('axios');
+const { handle, forecast, parsePlace } = require('../_lib/openweather');
 
-module.exports = async (req, res) => {
-    const { city } = req.query;
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    try {
-        const response = await axios.get(
-            `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`
-        );
-        res.json(response.data);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch forecast data' });
-    }
-};
+module.exports = handle((req) => forecast({ q: parsePlace(req.query.city) }));

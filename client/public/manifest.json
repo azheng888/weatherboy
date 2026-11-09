@@ -1,8 +1,13 @@
 {
   "short_name": "WeatherBoy",
-  "name": "WeatherBoy - Weather & Air Quality",
-  "description": "Real-time weather forecasts, air quality data, and hourly predictions",
+  "name": "WeatherBoy \u00b7 A calm read on the sky",
+  "description": "Hour-by-hour forecasts, air quality and the week ahead.",
   "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
@@ -21,6 +26,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#7c3aed",
-  "background_color": "#0f1419"
+  "theme_color": "#0b2414",
+  "background_color": "#f4f5f1"
 }
